@@ -1,241 +1,183 @@
-#include "boardgame.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "boardgame.h"
 
-void init_store(GameStore* store) {
-    store->count = 0;
-    store->capacity = 5; 
-    store->games = (BoardGame*)malloc(store->capacity * sizeof(BoardGame));
-    if (store->games == NULL) {
-        printf("Ошибка выделения памяти!\n");
-        exit(1);
-    }
-}
-
-void free_store(GameStore* store) {
-    if (store->games != NULL) {
-        free(store->games);
-        store->games = NULL;
-    }
-    store->count = 0;
-    store->capacity = 0;
-}
-
-void resize_store(GameStore* store) {
-    int new_capacity = store->capacity * 2;
-    BoardGame* new_games = (BoardGame*)realloc(store->games, new_capacity * sizeof(BoardGame));
-    
-    if (new_games == NULL) {
-        printf("Ошибка перевыделения памяти!\n");
+void all_vivod(baza* a) {
+    if (a->count == 0) {
+        printf("Список игр пуст\n");
         return;
     }
     
-    store->games = new_games;
-    store->capacity = new_capacity;
-    printf("Массив увеличен до %d элементов\n", new_capacity);
-}
-
-void add_game(GameStore* store) {
-    if (store->count >= store->capacity) {
-        resize_store(store);
-    }
-    
-    printf("\n--- Добавление новой игры ---\n");
-  
-    printf("Название: ");
-    scanf("%s", store->games[store->count].name);
-    
-    printf("Жанр: ");
-    scanf("%s", store->games[store->count].genre);
-    
-    printf("Минимальное кол-во игроков: ");
-    scanf("%d", &store->games[store->count].min_players);
-    
-    printf("Максимальное кол-во игроков: ");
-    scanf("%d", &store->games[store->count].max_players);
-    
-    printf("Цена: ");
-    scanf("%f", &store->games[store->count].price);
-    
-    printf("Количество на складе: ");
-    scanf("%d", &store->games[store->count].in_stock);
-    
-    store->games[store->count].id = store->count + 1;
-    
-    store->count++;
-    printf("Игра добавлена! Всего игр: %d\n", store->count);
-}
-
-void show_all(GameStore* store) {
-    printf("\n=== КАТАЛОГ ИГР (%d шт.) ===\n", store->count);
-    
-    if (store->count == 0) {
-        printf("Игр нет.\n");
-        return;
-    }
-    
-    for (int i = 0; i < store->count; i++) {
-        BoardGame* g = &store->games[i];
-        printf("\nID: %d\n", g->id);
-        printf("  Название: %s\n", g->name);
-        printf("  Жанр: %s\n", g->genre);
-        printf("  Игроков: %d-%d\n", g->min_players, g->max_players);
-        printf("  Цена: %.2f руб.\n", g->price);
-        printf("  В наличии: %d шт.\n", g->in_stock);
-        printf("------------------------\n");
+    printf("\n=== СПИСОК НАСТОЛЬНЫХ ИГР (%d шт.) ===\n", a->count);
+    for (int i = 0; i < a->count; i++) {
+        printf("Игра #%d: %s | %s | %d игроков | %d+ | %.2f руб. | %d шт.\n",
+               i + 1, a->games[i].name, a->games[i].genre,
+               a->games[i].players, a->games[i].age,
+               a->games[i].price, a->games[i].stock);
     }
 }
 
-void search_by_name(GameStore* store) {
-    char name[MAX_NAME];
-    printf("Введите название для поиска: ");
-    scanf("%s", name);
+void add(baza* a, int f) {
+    if (a->count >= a->capacity) {
+        int new_capacity = (a->capacity == 0) ? 5 : a->capacity * 2;
+        boardgame* new_games = realloc(a->games, new_capacity * sizeof(boardgame));
+        if (new_games == NULL) {
+            printf("Ошибка выделения памяти!\n");
+            return;
+        }
+        a->games = new_games;
+        a->capacity = new_capacity;
+    }
     
-    printf("\n--- Результаты поиска ---\n");
+    if (f) {
+        printf("Введите название игры: ");
+        scanf("%s", a->games[a->count].name);
+        
+        printf("Введите жанр: ");
+        scanf("%s", a->games[a->count].genre);
+        
+        printf("Введите количество игроков: ");
+        scanf("%d", &a->games[a->count].players);
+        
+        printf("Введите минимальный возраст: ");
+        scanf("%d", &a->games[a->count].age);
+        
+        printf("Введите цену: ");
+        scanf("%f", &a->games[a->count].price);
+        
+        printf("Введите количество на складе: ");
+        scanf("%d", &a->games[a->count].stock);
+    }
+    
+    a->count++;
+    printf("Игра добавлена!\n");
+}
+
+void delite(baza* a, char* name) {
     int found = 0;
+    for (int i = 0; i < a->count; i++) {
+        if (strcmp(a->games[i].name, name) == 0) {
+            for (int j = i; j < a->count - 1; j++) {
+                a->games[j] = a->games[j + 1];
+            }
+            a->count--;
+            found = 1;
+            printf("Игра '%s' удалена\n", name);
+            break;
+        }
+    }
     
-    for (int i = 0; i < store->count; i++) {
-     
-        if (strstr(store->games[i].name, name) != NULL) {
-            BoardGame* g = &store->games[i];
-            printf("\nID: %d | %s | %s | %d-%d игроков | %.2f руб. | %d шт.\n",
-                   g->id, g->name, g->genre, g->min_players, g->max_players, g->price, g->in_stock);
+    if (!found) {
+        printf("Игра '%s' не найдена\n", name);
+    }
+}
+
+void search(baza* a, char* name, char* genre) {
+    int found = 0;
+    printf("\n=== РЕЗУЛЬТАТЫ ПОИСКА ===\n");
+    
+    for (int i = 0; i < a->count; i++) {
+        int match_name = (strlen(name) == 0) || (strcmp(a->games[i].name, name) == 0);
+        int match_genre = (strlen(genre) == 0) || (strcmp(a->games[i].genre, genre) == 0);
+        
+        if (match_name && match_genre) {
+            printf("Найдено: %s | %s | %d игроков | %d+ | %.2f руб. | %d шт.\n",
+                   a->games[i].name, a->games[i].genre,
+                   a->games[i].players, a->games[i].age,
+                   a->games[i].price, a->games[i].stock);
             found = 1;
         }
     }
     
     if (!found) {
-        printf("Игры с названием '%s' не найдены.\n", name);
+        printf("Игры не найдены\n");
     }
 }
 
-void search_by_genre(GameStore* store) {
-    char genre[MAX_GENRE];
-    printf("Введите жанр для поиска: ");
-    scanf("%s", genre);
-    
-    printf("\n--- Игры жанра '%s' ---\n", genre);
-    int found = 0;
-    
-    for (int i = 0; i < store->count; i++) {
-        if (strcmp(store->games[i].genre, genre) == 0) {
-            BoardGame* g = &store->games[i];
-            printf("\nID: %d | %s | %d-%d игроков | %.2f руб. | %d шт.\n",
-                   g->id, g->name, g->min_players, g->max_players, g->price, g->in_stock);
-            found = 1;
+void redact(baza* a, char* name) {
+    for (int i = 0; i < a->count; i++) {
+        if (strcmp(a->games[i].name, name) == 0) {
+            printf("Редактирование игры '%s':\n", name);
+            
+            printf("Новое название (старое: %s): ", a->games[i].name);
+            scanf("%s", a->games[i].name);
+            
+            printf("Новый жанр (старый: %s): ", a->games[i].genre);
+            scanf("%s", a->games[i].genre);
+            
+            printf("Новое количество игроков (старое: %d): ", a->games[i].players);
+            scanf("%d", &a->games[i].players);
+            
+            printf("Новый минимальный возраст (старый: %d+): ", a->games[i].age);
+            scanf("%d", &a->games[i].age);
+            
+            printf("Новая цена (старая: %.2f): ", a->games[i].price);
+            scanf("%f", &a->games[i].price);
+            
+            printf("Новое количество на складе (старое: %d): ", a->games[i].stock);
+            scanf("%d", &a->games[i].stock);
+            
+            printf("Игра отредактирована!\n");
+            return;
         }
     }
-    
-    if (!found) {
-        printf("Игр жанра '%s' не найдено.\n", genre);
-    }
+    printf("Игра '%s' не найдена\n", name);
 }
 
-void delete_game(GameStore* store) {
-    int id;
-    printf("Введите ID игры для удаления: ");
-    scanf("%d", &id);
-    
-    int found_index = -1;
-  
-    for (int i = 0; i < store->count; i++) {
-        if (store->games[i].id == id) {
-            found_index = i;
-            break;
-        }
-    }
-    
-    if (found_index == -1) {
-        printf("Игра с ID %d не найдена.\n", id);
-        return;
-    }
-  
-    for (int i = found_index; i < store->count - 1; i++) {
-        store->games[i] = store->games[i + 1];
-    }
-    
-    store->count--;
-    printf("Игра с ID %d удалена. Осталось игр: %d\n", id, store->count);
-}
-
-void edit_game(GameStore* store) {
-    int id;
-    printf("Введите ID игры для редактирования: ");
-    scanf("%d", &id);
-    
-    int found_index = -1;
-    
-    for (int i = 0; i < store->count; i++) {
-        if (store->games[i].id == id) {
-            found_index = i;
-            break;
-        }
-    }
-    
-    if (found_index == -1) {
-        printf("Игра с ID %d не найдена.\n", id);
-        return;
-    }
-    
-    BoardGame* g = &store->games[found_index];
-    printf("\nРедактирование игры: %s (ID: %d)\n", g->name, g->id);
-    
-    printf("Новое название (текущее: %s): ", g->name);
-    scanf("%s", g->name);
-    
-    printf("Новый жанр (текущий: %s): ", g->genre);
-    scanf("%s", g->genre);
-    
-    printf("Новое мин. кол-во игроков (текущее: %d): ", g->min_players);
-    scanf("%d", &g->min_players);
-    
-    printf("Новое макс. кол-во игроков (текущее: %d): ", g->max_players);
-    scanf("%d", &g->max_players);
-    
-    printf("Новая цена (текущая: %.2f): ", g->price);
-    scanf("%f", &g->price);
-    
-    printf("Новое количество на складе (текущее: %d): ", g->in_stock);
-    scanf("%d", &g->in_stock);
-    
-    printf("Игра отредактирована!\n");
-}
-
-void save_to_file(GameStore* store, char* filename) {
-    FILE* file = fopen(filename, "wb");
-    
+void save(const char* filename, baza* a) {
+    FILE* file = fopen(filename, "w");
     if (file == NULL) {
-        printf("Ошибка открытия файла для записи!\n");
+        printf("Ошибка открытия файла для записи\n");
         return;
     }
     
-    fwrite(&store->count, sizeof(int), 1, file);
-   
-    fwrite(store->games, sizeof(BoardGame), store->count, file);
+    for (int i = 0; i < a->count; i++) {
+        fprintf(file, "%s %s %d %d %.2f %d\n",
+                a->games[i].name,
+                a->games[i].genre,
+                a->games[i].players,
+                a->games[i].age,
+                a->games[i].price,
+                a->games[i].stock);
+    }
     
     fclose(file);
-    printf("Данные сохранены в файл '%s' (%d игр)\n", filename, store->count);
+    printf("Данные сохранены в файл '%s'\n", filename);
 }
 
-void load_from_file(GameStore* store, char* filename) {
-    FILE* file = fopen(filename, "rb"); 
-    
+void load(char* filename, baza* a) {
+    FILE* file = fopen(filename, "r");
     if (file == NULL) {
-        printf("Файл '%s' не найден. Будет создана новая база.\n", filename);
+        printf("Файл '%s' не найден. Будет создан новый.\n", filename);
         return;
     }
     
-    int count;
-    fread(&count, sizeof(int), 1, file);
+    char name[50], genre[50];
+    int players, age, stock;
+    float price;
     
-    while (store->capacity < count) {
-        resize_store(store);
+    while (fscanf(file, "%s %s %d %d %f %d",
+                  name, genre, &players, &age, &price, &stock) == 6) {
+        add(a, 0);
+       
+        strcpy(a->games[a->count - 1].name, name);
+        strcpy(a->games[a->count - 1].genre, genre);
+        a->games[a->count - 1].players = players;
+        a->games[a->count - 1].age = age;
+        a->games[a->count - 1].price = price;
+        a->games[a->count - 1].stock = stock;
     }
- 
-    fread(store->games, sizeof(BoardGame), count, file);
     
-    store->count = count;
     fclose(file);
-    printf("Загружено %d игр из файла '%s'\n", count, filename);
+    printf("Загружено %d игр из файла '%s'\n", a->count, filename);
+}
+
+void free_baza(baza* a) {
+    if (a->games != NULL) {
+        free(a->games);
+        a->games = NULL;
+    }
+    a->count = 0;
+    a->capacity = 0;
 }
