@@ -1,73 +1,72 @@
-#include "boardgame.h"
 #include <stdio.h>
-
-#define FILENAME "games.dat"
-
-void print_menu() {
-    printf("\n=== МАГАЗИН НАСТОЛЬНЫХ ИГР ===\n");
-    printf("1. Показать все игры\n");
-    printf("2. Добавить игру\n");
-    printf("3. Найти по названию\n");
-    printf("4. Найти по жанру\n");
-    printf("5. Удалить игру\n");
-    printf("6. Редактировать игру\n");
-    printf("7. Сохранить в файл\n");
-    printf("8. Загрузить из файла\n");
-    printf("0. Выход\n");
-    printf("Выберите действие: ");
-}
+#include <stdlib.h>
+#include <string.h>
+#include "boardgame.h"
 
 int main() {
-    GameStore store;
-    int choice;
+    baza a;
+    a.games = NULL;
+    a.count = 0;
+    a.capacity = 0;
+
+    load("boardgames.txt", &a);
     
-    init_store(&store);
-    printf("Магазин настольных игр инициализирован!\n");
-    printf("Текущая вместимость: %d игр\n", store.capacity);
-    
-    load_from_file(&store, FILENAME);
+    int option;
+    char title[100];
+    char genre[50];
     
     do {
-        print_menu();
-        scanf("%d", &choice);
+        printf("\n=== МАГАЗИН НАСТОЛЬНЫХ ИГР ===\n");
+        printf("1. Вывести все игры\n");
+        printf("2. Добавить игру\n");
+        printf("3. Удалить игру\n");
+        printf("4. Найти игру\n");
+        printf("5. Изменить информацию об игре\n");
+        printf("6. Завершить работу\n");
+        printf("Введите выбранное число: ");
+        scanf("%d", &option);
         
-        switch(choice) {
+        switch(option) {
             case 1:
-                show_all(&store);
+                all_vivod(&a);
                 break;
             case 2:
-                add_game(&store);
+                add(&a, 1);
+                save("boardgames.txt", &a);
+                all_vivod(&a);
                 break;
             case 3:
-                search_by_name(&store);
+                printf("Название игры для удаления: ");
+                scanf("%s", title);
+                delite(&a, title);
+                save("boardgames.txt", &a);
+                all_vivod(&a);
                 break;
             case 4:
-                search_by_genre(&store);
+                printf("Название игры для поиска: ");
+                scanf("%s", title);
+                printf("Жанр игры: ");
+                scanf("%s", genre);
+                search(&a, title, genre);
                 break;
             case 5:
-                delete_game(&store);
+                printf("Название игры для редактирования: ");
+                scanf("%s", title);
+                redact(&a, title);
+                save("boardgames.txt", &a);
+                all_vivod(&a);
                 break;
             case 6:
-                edit_game(&store);
-                break;
-            case 7:
-                save_to_file(&store, FILENAME);
-                break;
-            case 8:
-                load_from_file(&store, FILENAME);
-                break;
-            case 0:
-                printf("Выход...\n");
+                printf("Завершение работы...\n");
                 break;
             default:
-                printf("Неверный выбор!\n");
+                printf("Некорректный выбор, попробуйте еще раз\n");
+                break;
         }
-    } while(choice != 0);
+    } while (option != 6);
     
-    save_to_file(&store, FILENAME);
-   
-    free_store(&store);
-    printf("Память освобождена. До свидания!\n");
+    save("boardgames.txt", &a);
+    free_baza(&a);
     
     return 0;
 }
