@@ -1,34 +1,32 @@
 #ifndef BOARDGAME_H
 #define BOARDGAME_H
 
-#define MAX_NAME 50
-#define MAX_GENRE 30
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct {
-    int id;
-    char name[MAX_NAME];
-    char genre[MAX_GENRE];
-    int min_players;
-    int max_players;
+    char name[50];
+    char genre[50];
+    int players;
+    int age;
     float price;
-    int in_stock;
-} BoardGame;
+    int stock;
+} boardgame;
 
 typedef struct {
-    BoardGame* games;  
+    boardgame* games;   
     int count;         
-    int capacity;     
-} GameStore;
+    int capacity;      
+} baza;
 
-void init_store(GameStore* store);                  
-void free_store(GameStore* store);                   
-void add_game(GameStore* store);                      
-void show_all(GameStore* store);                    
-void search_by_name(GameStore* store);              
-void search_by_genre(GameStore* store);                
-void delete_game(GameStore* store);                  
-void edit_game(GameStore* store);                      
-void save_to_file(GameStore* store, char* filename);   
-void load_from_file(GameStore* store, char* filename); 
+void all_vivod(baza* a);
+void add(baza* a, int f);
+void delite(baza* a, char* name);
+void search(baza* a, char* name, char* genre);
+void redact(baza* a, char* name);
+void save(const char* filename, baza* a);
+void load(char* filename, baza* a);
+void free_baza(baza* a);
 
 #endif
