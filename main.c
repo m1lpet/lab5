@@ -9,7 +9,11 @@ int main() {
     a.count = 0;
     a.capacity = 0;
 
-    load("boardgames.txt", &a);
+    char filename[100];
+    printf("Введите имя файла для загрузки: ");
+    scanf("%99s", filename); 
+    
+    load(filename, &a);
     
     int option;
     char title[100];
@@ -65,7 +69,7 @@ int main() {
         }
     } while (option != 6);
     
-    save("boardgames.txt", &a);
+    save(filename, &a);
     free_baza(&a);
     
     return 0;
